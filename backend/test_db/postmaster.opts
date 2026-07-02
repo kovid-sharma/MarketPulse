@@ -1,0 +1,1 @@
+/opt/homebrew/Cellar/postgresql@14/14.19/bin/postgres "-D" "/Users/kvid/Desktop/NewsAI/backend/test_db" "-p" "54320"
