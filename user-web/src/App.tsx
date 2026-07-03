@@ -61,6 +61,12 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route 
+          path="/" 
+          element={
+            isAuthenticated ? <Navigate to="/feed" replace /> : <LoginScreen onLoginSuccess={() => setIsAuthenticated(true)} />
+          } 
+        />
+        <Route 
           path="/login" 
           element={
             isAuthenticated ? <Navigate to="/feed" replace /> : <LoginScreen onLoginSuccess={() => setIsAuthenticated(true)} />
@@ -80,7 +86,7 @@ export default function App() {
                 </Routes>
               </Layout>
             ) : (
-              <Navigate to="/login" replace />
+              <Navigate to="/" replace />
             )
           } 
         />
