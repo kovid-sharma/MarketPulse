@@ -8,22 +8,28 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from passlib.context import CryptContext
+import bcrypt
 
 from app.models.article import ArticleDB, Base, NormalizedArticle
 from app.models.user import UserDB
 
 # ── Password hashing ──────────────────────────────────────────────────────────
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+    # Hash password using bcrypt directly
+    pwd_bytes = password.encode("utf-8")
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(pwd_bytes, salt)
+    return hashed.decode("utf-8")
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain, hashed)
+    try:
+        return bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
+    except Exception:
+        return False
+
 
 
 # ── Global In-Memory Stores ───────────────────────────────────────────────────
