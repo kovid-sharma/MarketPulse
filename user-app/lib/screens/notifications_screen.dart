@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 // Simple in-memory notification store (replaced by FCM integration in production)
 final notificationsProvider = StateProvider<List<_Notification>>((ref) => [

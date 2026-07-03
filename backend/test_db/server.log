@@ -4,3 +4,5 @@
 2026-07-03 02:32:31.146 IST [12412] LOG:  listening on Unix socket "/tmp/.s.PGSQL.54320"
 2026-07-03 02:32:31.149 IST [12413] LOG:  database system was shut down at 2026-07-03 02:32:29 IST
 2026-07-03 02:32:31.151 IST [12412] LOG:  database system is ready to accept connections
+2026-07-03 10:00:27.165 IST [20119] LOG:  unexpected EOF on client connection with an open transaction
+2026-07-03 10:04:22.571 IST [22615] LOG:  unexpected EOF on client connection with an open transaction

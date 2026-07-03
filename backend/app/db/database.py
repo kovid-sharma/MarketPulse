@@ -33,10 +33,15 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 # ── Engine ────────────────────────────────────────────────────────────────────
 
+connect_args = {}
+if "localhost" not in settings.DATABASE_URL and "127.0.0.1" not in settings.DATABASE_URL:
+    connect_args["ssl"] = "require"
+
 engine = create_async_engine(
     settings.DATABASE_URL,
     echo=False,
     pool_pre_ping=True,
+    connect_args=connect_args,
 )
 
 AsyncSessionLocal = async_sessionmaker(

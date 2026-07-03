@@ -4,6 +4,8 @@ Reads all settings from environment variables / .env file.
 """
 
 from functools import lru_cache
+from typing import Any
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -14,6 +16,20 @@ class Settings(BaseSettings):
 
     # ── Database ──────────────────────────────────────────────────────────────
     DATABASE_URL: str  # e.g. postgresql+asyncpg://user:pass@host/db
+
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def validate_database_url(cls, v: Any) -> Any:
+        if isinstance(v, str):
+            # Normalize schemes to postgresql+asyncpg for SQLAlchemy compatibility
+            if v.startswith("postgres://"):
+                v = v.replace("postgres://", "postgresql+asyncpg://", 1)
+            elif v.startswith("postgresql://") and not v.startswith("postgresql+asyncpg://"):
+                v = v.replace("postgresql://", "postgresql+asyncpg://", 1)
+            # Normalize sslmode=require to ssl=require for asyncpg compatibility
+            if "sslmode=require" in v:
+                v = v.replace("sslmode=require", "ssl=require")
+        return v
 
     # ── GNews polling ────────────────────────────────────────────────────────
     GNEWS_POLL_INTERVAL_MINUTES: int = 5

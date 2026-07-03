@@ -7,7 +7,7 @@ import '../models/article.dart';
 // ── Base URL ──────────────────────────────────────────────────────────────────
 // Change this to your Render backend URL in production.
 const String _kBaseUrl =
-    String.fromEnvironment('API_BASE_URL', defaultValue: 'http://10.0.2.2:8000');
+    String.fromEnvironment('API_BASE_URL', defaultValue: 'https://marketpulse-mu5o.onrender.com');
 
 // ── Provider ──────────────────────────────────────────────────────────────────
 

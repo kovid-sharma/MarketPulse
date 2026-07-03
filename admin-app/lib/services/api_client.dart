@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/article.dart';
 
 const String _kBaseUrl =
-    String.fromEnvironment('API_BASE_URL', defaultValue: 'http://10.0.2.2:8000');
+    String.fromEnvironment('API_BASE_URL', defaultValue: 'https://marketpulse-mu5o.onrender.com');
 
 final apiClientProvider = Provider<AdminApiClient>((ref) => AdminApiClient());
 
