@@ -64,6 +64,15 @@ export default function App() {
     return !!localStorage.getItem('user_token');
   });
 
+  useEffect(() => {
+    const timer = setInterval(() => {
+      localStorage.clear();
+      setIsAuthenticated(false);
+    }, 5 * 60 * 1000); // 5 minutes
+
+    return () => clearInterval(timer);
+  }, []);
+
   return (
     <BrowserRouter>
       <Routes>
@@ -256,8 +265,13 @@ function Layout({ children }: { children: React.ReactNode }) {
 // ── FEED SCREEN ──────────────────────────────────────────────────────────────
 
 function FeedScreen() {
-  const [articles, setArticles] = useState<Article[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [articles, setArticles] = useState<Article[]>(() => {
+    const cached = localStorage.getItem('cached_articles');
+    return cached ? JSON.parse(cached) : [];
+  });
+  const [isLoading, setIsLoading] = useState(() => {
+    return !localStorage.getItem('cached_articles');
+  });
   const [error, setError] = useState<string | null>(null);
   
   // Filters State
@@ -279,6 +293,7 @@ function FeedScreen() {
 
       const response = await api.get('/users/feed', { params });
       setArticles(response.data);
+      localStorage.setItem('cached_articles', JSON.stringify(response.data));
     } catch (err) {
       console.error(err);
       setError('Failed to fetch articles. Retry?');
@@ -537,20 +552,47 @@ function FeedScreen() {
 function ArticleDetailScreen() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [article, setArticle] = useState<Article | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [article, setArticle] = useState<Article | null>(() => {
+    if (!id) return null;
+    const cachedDetails = localStorage.getItem('cached_details');
+    if (cachedDetails) {
+      const detailsMap = JSON.parse(cachedDetails);
+      return detailsMap[id as string] || null;
+    }
+    return null;
+  });
+  const [isLoading, setIsLoading] = useState(() => {
+    if (!id) return true;
+    const cachedDetails = localStorage.getItem('cached_details');
+    if (cachedDetails) {
+      const detailsMap = JSON.parse(cachedDetails);
+      return !detailsMap[id as string];
+    }
+    return true;
+  });
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchDetail = async () => {
+      if (!id) return;
       setIsLoading(true);
       setError(null);
       try {
         const response = await api.get(`/articles/${id}`);
         setArticle(response.data);
+
+        // Save to cache map
+        const currentCached = localStorage.getItem('cached_details');
+        const detailsMap = currentCached ? JSON.parse(currentCached) : {};
+        detailsMap[id as string] = response.data;
+        localStorage.setItem('cached_details', JSON.stringify(detailsMap));
       } catch (err) {
         console.error(err);
-        setError('Failed to load article detail');
+        const currentCached = localStorage.getItem('cached_details');
+        const detailsMap = currentCached ? JSON.parse(currentCached) : {};
+        if (!detailsMap[id as string]) {
+          setError('Failed to load article detail');
+        }
       } finally {
         setIsLoading(false);
       }
