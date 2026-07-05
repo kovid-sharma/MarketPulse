@@ -29,6 +29,15 @@ api.interceptors.request.use((config) => {
 
 // ── TYPES ────────────────────────────────────────────────────────────────────
 
+interface StockImpact {
+  symbol: string;
+  name?: string;
+  sector?: string;
+  direction: 'positive' | 'negative' | 'neutral';
+  effect: 'high' | 'medium' | 'low';
+  reason?: string;
+}
+
 interface Article {
   id: string;
   headline: string;
@@ -43,11 +52,9 @@ interface Article {
   published_at?: string;
   credibility?: string;
   geography?: 'india' | 'global';
-  impacts?: Array<{
-    sector: string;
-    stocks: string[];
-    direction: string;
-  }>;
+  markets_affected?: string[];
+  trade_logic?: string;
+  impacts?: StockImpact[];
 }
 
 // ── APP WRAPPER ──────────────────────────────────────────────────────────────
@@ -291,8 +298,50 @@ function FeedScreen() {
   };
 
   const getSectors = (article: Article) => {
+    if (article.markets_affected && article.markets_affected.length > 0) {
+      return article.markets_affected;
+    }
     if (!article.impacts) return [];
-    return Array.from(new Set(article.impacts.map(i => i.sector)));
+    return Array.from(new Set(article.impacts.map(i => (i as any).sector).filter(Boolean)));
+  };
+
+  // Get the highest effect level for a given stock across all impacts
+  const getTopStockEffect = (article: Article, symbol: string): 'high' | 'medium' | 'low' => {
+    if (!article.impacts) return 'low';
+    for (const imp of article.impacts as StockImpact[]) {
+      if (imp.symbol === symbol) return imp.effect || 'low';
+    }
+    return 'low';
+  };
+
+  const getUniqueStocksFromImpacts = (article: Article): StockImpact[] => {
+    if (!article.impacts) return [];
+    const seen = new Set<string>();
+    const result: StockImpact[] = [];
+    for (const imp of article.impacts as StockImpact[]) {
+      if (imp.symbol && !seen.has(imp.symbol)) {
+        seen.add(imp.symbol);
+        result.push(imp);
+      }
+    }
+    return result;
+  };
+
+  // Effect color helpers
+  const effectBg = (effect: 'high' | 'medium' | 'low'): string => {
+    if (effect === 'high') return 'rgba(239,68,68,0.18)';
+    if (effect === 'medium') return 'rgba(245,158,11,0.18)';
+    return 'rgba(16,185,129,0.18)';
+  };
+  const effectBorder = (effect: 'high' | 'medium' | 'low'): string => {
+    if (effect === 'high') return 'rgba(239,68,68,0.5)';
+    if (effect === 'medium') return 'rgba(245,158,11,0.5)';
+    return 'rgba(16,185,129,0.5)';
+  };
+  const effectColor = (effect: 'high' | 'medium' | 'low'): string => {
+    if (effect === 'high') return '#EF4444';
+    if (effect === 'medium') return '#F59E0B';
+    return '#10B981';
   };
 
   return (
@@ -352,7 +401,9 @@ function FeedScreen() {
         </div>
       ) : (
         <div className="feed-list">
-          {articles.map((article) => (
+          {articles.map((article) => {
+            const topStocks = getUniqueStocksFromImpacts(article).slice(0, 4);
+            return (
             <div key={article.id} className="article-card" onClick={() => navigate(`/article/${article.id}`)}>
               <div className="card-top">
                 {article.source && <span className="source-badge">{article.source}</span>}
@@ -372,6 +423,32 @@ function FeedScreen() {
                 </div>
               )}
 
+              {/* Affected stocks with effect-coloured backgrounds */}
+              {topStocks.length > 0 && (
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '10px' }}>
+                  {topStocks.map((s) => (
+                    <span
+                      key={s.symbol}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        padding: '3px 8px',
+                        borderRadius: '6px',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        background: effectBg(s.effect),
+                        color: effectColor(s.effect),
+                        border: `1px solid ${effectBorder(s.effect)}`,
+                        letterSpacing: '0.5px',
+                      }}
+                    >
+                      {s.direction === 'positive' ? '▲' : s.direction === 'negative' ? '▼' : '■'} {s.symbol}
+                    </span>
+                  ))}
+                </div>
+              )}
+
               <div className="tags-row">
                 {article.geography && <span className="tag geography">{article.geography}</span>}
                 {getSectors(article).map((s) => (
@@ -379,7 +456,8 @@ function FeedScreen() {
                 ))}
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -487,23 +565,41 @@ function ArticleDetailScreen() {
     if (id) fetchDetail();
   }, [id]);
 
-  const getStockDirection = (stockSymbol: string): 'bullish' | 'bearish' | 'neutral' => {
-    if (!article?.impacts) return 'neutral';
-    for (const impact of article.impacts) {
-      if (impact.stocks.includes(stockSymbol)) {
-        return (impact.direction as any) || 'neutral';
+  // ── helpers ──────────────────────────────────────────────────────────────
+  const getStockImpacts = (): StockImpact[] => {
+    if (!article?.impacts) return [];
+    const seen = new Set<string>();
+    const result: StockImpact[] = [];
+    for (const imp of article.impacts as StockImpact[]) {
+      if (imp.symbol && !seen.has(imp.symbol)) {
+        seen.add(imp.symbol);
+        result.push(imp);
       }
     }
-    return 'neutral';
+    return result;
   };
 
-  const getUniqueStocks = () => {
-    if (!article?.impacts) return [];
-    const stockSet = new Set<string>();
-    for (const impact of article.impacts) {
-      impact.stocks.forEach(s => stockSet.add(s));
-    }
-    return Array.from(stockSet);
+  const effectColor = (effect: 'high' | 'medium' | 'low') => {
+    if (effect === 'high') return '#EF4444';
+    if (effect === 'medium') return '#F59E0B';
+    return '#10B981';
+  };
+  const effectBg = (effect: 'high' | 'medium' | 'low') => {
+    if (effect === 'high') return 'rgba(239,68,68,0.12)';
+    if (effect === 'medium') return 'rgba(245,158,11,0.12)';
+    return 'rgba(16,185,129,0.12)';
+  };
+  const effectBorder = (effect: 'high' | 'medium' | 'low') => {
+    if (effect === 'high') return 'rgba(239,68,68,0.35)';
+    if (effect === 'medium') return 'rgba(245,158,11,0.35)';
+    return 'rgba(16,185,129,0.35)';
+  };
+
+  // Blocks: high → 4-5 filled, medium → 2-3 filled, low → 1 filled
+  const effectBlocks = (effect: 'high' | 'medium' | 'low'): number => {
+    if (effect === 'high') return 5;
+    if (effect === 'medium') return 3;
+    return 1;
   };
 
   return (
@@ -580,20 +676,127 @@ function ArticleDetailScreen() {
             </div>
           )}
 
-          {getUniqueStocks().length > 0 && (
-            <>
-              <h4 className="stocks-section-title">Affected Stocks</h4>
-              <div className="stocks-wrap">
-                {getUniqueStocks().map((s) => {
-                  const dir = getStockDirection(s);
+          {/* ── Markets Affected ───────────────────────────────────────── */}
+          {article.markets_affected && article.markets_affected.length > 0 && (
+            <div className="info-card" style={{ marginTop: '16px' }}>
+              <div className="info-header" style={{ color: '#A78BFA' }}>
+                <Landmark size={16} />
+                <span>Markets Affected</span>
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '10px' }}>
+                {article.markets_affected.map((m) => (
+                  <span key={m} style={{
+                    padding: '4px 12px',
+                    borderRadius: '20px',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    background: 'rgba(167,139,250,0.12)',
+                    color: '#A78BFA',
+                    border: '1px solid rgba(167,139,250,0.3)',
+                    letterSpacing: '0.3px',
+                  }}>
+                    {m}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── Stocks Affected ────────────────────────────────────────── */}
+          {getStockImpacts().length > 0 && (
+            <div style={{ marginTop: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                <TrendingUp size={16} style={{ color: 'var(--text-secondary)' }} />
+                <h4 className="stocks-section-title" style={{ marginBottom: 0 }}>Stocks Affected</h4>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '10px' }}>
+                {getStockImpacts().map((stock) => {
+                  const col = effectColor(stock.effect);
+                  const bg = effectBg(stock.effect);
+                  const border = effectBorder(stock.effect);
+                  const filled = effectBlocks(stock.effect);
                   return (
-                    <span key={s} className={`stock-pill ${dir}`}>
-                      {s} {dir === 'bullish' ? '▲' : dir === 'bearish' ? '▼' : '■'}
-                    </span>
+                    <div key={stock.symbol} style={{
+                      background: bg,
+                      border: `1px solid ${border}`,
+                      borderRadius: '12px',
+                      padding: '12px 14px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '8px',
+                    }}>
+                      {/* Stock name + direction */}
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <span style={{ color: col, fontWeight: 700, fontSize: '14px', letterSpacing: '0.5px' }}>
+                          {stock.symbol}
+                        </span>
+                        <span style={{ fontSize: '11px', color: col, opacity: 0.9 }}>
+                          {stock.direction === 'positive' ? '▲' : stock.direction === 'negative' ? '▼' : '━'}
+                        </span>
+                      </div>
+
+                      {/* Company name */}
+                      {stock.name && stock.name !== stock.symbol && (
+                        <span style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.3 }}>
+                          {stock.name}
+                        </span>
+                      )}
+
+                      {/* Block-bar indicator */}
+                      <div style={{ display: 'flex', gap: '3px' }}>
+                        {[1,2,3,4,5].map((n) => (
+                          <div key={n} style={{
+                            flex: 1,
+                            height: '5px',
+                            borderRadius: '3px',
+                            background: n <= filled ? col : 'rgba(255,255,255,0.1)',
+                            transition: 'background 0.2s',
+                          }} />
+                        ))}
+                      </div>
+
+                      {/* Effect label */}
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <span style={{
+                          fontSize: '10px',
+                          fontWeight: 700,
+                          color: col,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.8px',
+                        }}>
+                          {stock.effect} impact
+                        </span>
+                        {stock.sector && (
+                          <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                            {stock.sector}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Reason */}
+                      {stock.reason && (
+                        <p style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5 }}>
+                          {stock.reason}
+                        </p>
+                      )}
+                    </div>
                   );
                 })}
               </div>
-            </>
+            </div>
+          )}
+
+          {/* ── Trade Logic ────────────────────────────────────────────── */}
+          {article.trade_logic && article.trade_logic.trim() && (
+            <div className="info-card" style={{ marginTop: '16px', background: 'linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(139,92,246,0.06) 100%)', borderColor: 'rgba(99,102,241,0.25)' }}>
+              <div className="info-header" style={{ color: '#818CF8' }}>
+                <Lightbulb size={16} />
+                <span>Logic Behind the Trade</span>
+              </div>
+              <div className="info-body" style={{ color: 'var(--text-secondary)', lineHeight: 1.7 }}>
+                {article.trade_logic}
+              </div>
+            </div>
           )}
 
           {article.url && (

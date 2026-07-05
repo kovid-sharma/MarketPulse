@@ -116,6 +116,15 @@ async def process_article(article_id: uuid.UUID) -> None:
             updates["impact_explanation"] = enrichment.impact_explanation
             updates["key_takeaway"] = enrichment.key_takeaway
             updates["sentiment"] = enrichment.sentiment
+            updates["markets_affected"] = enrichment.markets_affected
+            updates["trade_logic"] = enrichment.trade_logic
+
+            # Prefer Gemini's structured stock_impacts over keyword-based impacts
+            # if Gemini returned meaningful data; otherwise fall back to keyword mapper
+            if enrichment.stock_impacts:
+                updates["impacts"] = enrichment.stock_impacts
+            # else: keep the keyword-based impacts already set in updates["impacts"]
+
             updates["ai_status"] = "done"
         except Exception as exc:
             logger.error("Enrichment error for %s: %s", article_id, exc)

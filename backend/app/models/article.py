@@ -56,7 +56,7 @@ class ArticleDB(Base):
     classification_confidence = Column(Float, nullable=True)
 
     # Impact mapping
-    impacts = Column(JSON, nullable=True)  # list of {sector, stocks, direction}
+    impacts = Column(JSON, nullable=True)  # list of {sector, stocks, direction, effect, symbol}
 
     # AI enrichment
     summary = Column(Text, nullable=True)
@@ -64,6 +64,8 @@ class ArticleDB(Base):
     impact_explanation = Column(Text, nullable=True)
     key_takeaway = Column(Text, nullable=True)
     sentiment = Column(String(16), nullable=True)  # bullish | bearish | neutral
+    markets_affected = Column(JSON, nullable=True)  # list of market/sector strings
+    trade_logic = Column(Text, nullable=True)  # Gemini reasoning for the trade
 
     # Raw
     raw_json = Column(JSON, nullable=True)
@@ -121,6 +123,8 @@ class ArticleOut(ArticleBase):
     impact_explanation: str | None
     key_takeaway: str | None
     sentiment: SentimentEnum | None
+    markets_affected: list[str] | None = None
+    trade_logic: str | None = None
 
     model_config = {"from_attributes": True}
 

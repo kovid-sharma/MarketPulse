@@ -38,7 +38,7 @@ class Settings(BaseSettings):
     GNEWS_COUNTRY: str = "in"  # 'in' = India
 
     # ── Pipeline ─────────────────────────────────────────────────────────────
-    GEMINI_MODEL: str = "gemini-1.5-flash"
+    GEMINI_MODEL: str = "gemini-2.0-flash"
     GEMINI_MAX_RETRIES: int = 3
     FINANCE_FILTER_CONFIDENCE_THRESHOLD: float = 0.6
 

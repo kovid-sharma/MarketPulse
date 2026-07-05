@@ -1,5 +1,38 @@
 // Article model matching backend ArticleOut schema
 
+class StockImpact {
+  final String symbol;
+  final String? name;
+  final String? sector;
+  final String direction; // positive | negative | neutral
+  final String effect; // high | medium | low
+  final String? reason;
+
+  const StockImpact({
+    required this.symbol,
+    this.name,
+    this.sector,
+    required this.direction,
+    required this.effect,
+    this.reason,
+  });
+
+  factory StockImpact.fromJson(Map<String, dynamic> json) {
+    final effect = json['effect'] as String? ?? 'low';
+    final direction = json['direction'] as String? ?? 'neutral';
+    return StockImpact(
+      symbol: (json['symbol'] as String? ?? '').toUpperCase().trim(),
+      name: json['name'] as String?,
+      sector: json['sector'] as String?,
+      direction: ['positive', 'negative', 'neutral'].contains(direction)
+          ? direction
+          : 'neutral',
+      effect: ['high', 'medium', 'low'].contains(effect) ? effect : 'low',
+      reason: json['reason'] as String?,
+    );
+  }
+}
+
 class Article {
   final String id;
   final String headline;
@@ -20,6 +53,8 @@ class Article {
   final String? impactExplanation;
   final String? keyTakeaway;
   final String? sentiment;
+  final List<String> marketsAffected;
+  final String? tradeLogic;
 
   const Article({
     required this.id,
@@ -41,6 +76,8 @@ class Article {
     this.impactExplanation,
     this.keyTakeaway,
     this.sentiment,
+    this.marketsAffected = const [],
+    this.tradeLogic,
   });
 
   factory Article.fromJson(Map<String, dynamic> json) {
@@ -69,10 +106,33 @@ class Article {
       impactExplanation: json['impact_explanation'] as String?,
       keyTakeaway: json['key_takeaway'] as String?,
       sentiment: json['sentiment'] as String?,
+      marketsAffected: (json['markets_affected'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
+      tradeLogic: json['trade_logic'] as String?,
     );
   }
 
+  /// Returns structured StockImpact objects from the impacts JSON
+  List<StockImpact> get stockImpacts {
+    if (impacts == null) return [];
+    final seen = <String>{};
+    final result = <StockImpact>[];
+    for (final imp in impacts!) {
+      final symbol = (imp['symbol'] as String? ?? '').trim().toUpperCase();
+      if (symbol.isNotEmpty && !seen.contains(symbol)) {
+        seen.add(symbol);
+        result.add(StockImpact.fromJson(imp));
+      }
+    }
+    return result;
+  }
+
+  /// Fallback: unique stock symbols from old-style impacts
   List<String> get affectedStocks {
+    final si = stockImpacts;
+    if (si.isNotEmpty) return si.map((s) => s.symbol).toList();
     if (impacts == null) return [];
     return impacts!
         .expand((i) => (i['stocks'] as List<dynamic>? ?? []).cast<String>())
@@ -81,6 +141,7 @@ class Article {
   }
 
   List<String> get sectors {
+    if (marketsAffected.isNotEmpty) return marketsAffected;
     if (impacts == null) return [];
     return impacts!
         .map((i) => i['sector'] as String? ?? '')

@@ -99,14 +99,15 @@ class ArticleCard extends ConsumerWidget {
                   ),
                 ),
               ],
-              if (article.affectedStocks.isNotEmpty) ...[
+              // Stocks affected — show with effect colours
+              if (article.stockImpacts.isNotEmpty) ...[
                 const SizedBox(height: 10),
                 Wrap(
                   spacing: 6,
                   runSpacing: 4,
-                  children: article.affectedStocks
+                  children: article.stockImpacts
                       .take(4)
-                      .map((stock) => _StockChip(symbol: stock))
+                      .map((s) => _StockEffectChip(stock: s))
                       .toList(),
                 ),
               ],
@@ -201,25 +202,40 @@ class _SentimentChip extends StatelessWidget {
   }
 }
 
-class _StockChip extends StatelessWidget {
-  final String symbol;
-  const _StockChip({required this.symbol});
+class _StockEffectChip extends StatelessWidget {
+  final StockImpact stock;
+  const _StockEffectChip({required this.stock});
+
+  static Color _col(String effect) {
+    switch (effect) {
+      case 'high': return const Color(0xFFEF4444);
+      case 'medium': return const Color(0xFFF59E0B);
+      default: return const Color(0xFF10B981);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final color = _col(stock.effect);
+    final dirArrow = stock.direction == 'positive'
+        ? '▲'
+        : stock.direction == 'negative'
+            ? '▼'
+            : '■';
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E3A5F),
+        color: color.withOpacity(0.15),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: const Color(0xFF2D5A8E)),
+        border: Border.all(color: color.withOpacity(0.4)),
       ),
       child: Text(
-        symbol,
-        style: const TextStyle(
-          color: Color(0xFF60A5FA),
+        '$dirArrow ${stock.symbol}',
+        style: TextStyle(
+          color: color,
           fontSize: 11,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.3,
         ),
       ),
     );
