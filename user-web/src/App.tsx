@@ -305,14 +305,7 @@ function FeedScreen() {
     return Array.from(new Set(article.impacts.map(i => (i as any).sector).filter(Boolean)));
   };
 
-  // Get the highest effect level for a given stock across all impacts
-  const getTopStockEffect = (article: Article, symbol: string): 'high' | 'medium' | 'low' => {
-    if (!article.impacts) return 'low';
-    for (const imp of article.impacts as StockImpact[]) {
-      if (imp.symbol === symbol) return imp.effect || 'low';
-    }
-    return 'low';
-  };
+  
 
   const getUniqueStocksFromImpacts = (article: Article): StockImpact[] => {
     if (!article.impacts) return [];
