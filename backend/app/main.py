@@ -40,6 +40,8 @@ from app.pipeline.classifier import classify_article
 from app.pipeline.enrichment import enrich_article
 from app.pipeline.finance_filter import is_financially_relevant
 from app.pipeline.impact_mapper import map_impact
+from app.vector.opensearch_client import setup_indices
+from app.vector.sync_worker import sync_article_to_vector_store
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s – %(message)s"
@@ -138,6 +140,35 @@ async def process_article(article_id: uuid.UUID) -> None:
             updates.get("ai_status"),
         )
 
+        # ── Step 5: Vector sync to AWS OpenSearch (non-blocking) ────────────────
+        if updates.get("ai_status") == "done":
+            try:
+                impacts = updates.get("impacts") or []
+                synced = await sync_article_to_vector_store(
+                    article_id=str(article_id),
+                    headline=article.headline,
+                    content=article.content,
+                    impacts=impacts,
+                    sentiment=updates.get("sentiment"),
+                    published_at=(
+                        article.published_at.isoformat()
+                        if article.published_at else None
+                    ),
+                    admin_verified=False,
+                )
+                if synced:
+                    await update_article_pipeline(
+                        session,
+                        article_id,
+                        {
+                            "vector_synced": True,
+                            "vector_synced_at": datetime.now(timezone.utc),
+                        },
+                    )
+                    logger.info("Article %s synced to AWS OpenSearch vector store", article_id)
+            except Exception as vec_exc:
+                logger.warning("Vector sync failed for %s (non-fatal): %s", article_id, vec_exc)
+
 
 # ── GNews polling job ─────────────────────────────────────────────────────────
 
@@ -169,6 +200,17 @@ async def poll_gnews() -> None:
 async def lifespan(app: FastAPI):
     await init_db()
     logger.info("Database initialised")
+
+    # Set up AWS OpenSearch vector indices (non-blocking if AWS not configured)
+    try:
+        loop = asyncio.get_event_loop()
+        ok = await loop.run_in_executor(None, setup_indices)
+        if ok:
+            logger.info("AWS OpenSearch Serverless indices ready")
+        else:
+            logger.info("AWS OpenSearch not configured – vector features disabled")
+    except Exception as os_exc:
+        logger.warning("OpenSearch setup failed (non-fatal): %s", os_exc)
 
     worker_task = asyncio.create_task(q.run_worker(process_article))
 

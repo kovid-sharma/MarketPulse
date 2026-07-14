@@ -20,6 +20,7 @@ _ENRICHMENT_PROMPT = """
 You are a financial news analyst for Indian markets. Analyse the article below and return
 enriched metadata as JSON. Respond ONLY with valid JSON, no markdown fences.
 
+{rag_context}
 Article headline: {headline}
 Article content: {content}
 
@@ -45,6 +46,8 @@ Return exactly this JSON structure:
 }}
 
 Guidelines:
+- Use the HISTORICAL CONTEXT above (if provided) to calibrate your stock impact predictions.
+  Prefer patterns from admin-verified examples over AI-predicted ones.
 - sentiment: bullish = prices likely up, bearish = prices likely down, neutral = no clear direction
 - markets_affected: list only the major market segments impacted (2-5 items max)
 - trade_logic: explain the causal chain in 2-4 sentences, suitable for a retail investor
@@ -70,9 +73,22 @@ class EnrichmentResult:
 
 
 async def enrich_article(article: NormalizedArticle) -> EnrichmentResult:
-    """Call Gemini to enrich an article with summary, sentiment, and per-stock impact data."""
+    """Call Gemini to enrich an article with summary, sentiment, and per-stock impact data.
+    
+    Injects RAG context from AWS OpenSearch vector store if available,
+    using similar past articles (especially admin-verified ones) to improve accuracy.
+    """
     try:
+        # Retrieve RAG context from AWS OpenSearch (non-blocking, fails gracefully)
+        from app.vector.rag_context import build_rag_context
+        article_text = f"{article.headline}. {(article.content or '')[:2000]}"
+        rag_context = await build_rag_context(article_text)
+        if rag_context:
+            rag_context = rag_context + "\n\n"
+            logger.info("RAG context injected for article: %s", article.headline[:60])
+
         prompt = _ENRICHMENT_PROMPT.format(
+            rag_context=rag_context,
             headline=article.headline,
             content=(article.content or "")[:2000],
         )

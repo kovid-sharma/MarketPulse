@@ -562,3 +562,79 @@
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* ── Nav Badge ────────────────────────────────────────────────────────────── */
+.nav-badge { display: inline-flex; align-items: center; background: linear-gradient(135deg, #8B5CF6, #6366F1); color: #fff; font-size: 9px; font-weight: 700; letter-spacing: 0.5px; padding: 2px 5px; border-radius: 4px; margin-left: 5px; }
+
+/* ── Vector Stats Row ─────────────────────────────────────────────────────── */
+.vector-stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+.vector-stat-card { background: var(--surface-color); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; display: flex; align-items: flex-start; gap: 12px; transition: border-color 0.2s; }
+.vector-stat-card:hover { border-color: var(--primary-color); }
+.vector-stat-icon { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: rgba(99,102,241,0.1); border-radius: 8px; flex-shrink: 0; }
+.vector-stat-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+.vector-stat-value { font-size: 22px; font-weight: 700; margin: 2px 0; }
+.vector-stat-sub { font-size: 11px; color: var(--text-muted); }
+
+/* ── Vector Tabs ──────────────────────────────────────────────────────────── */
+.vector-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border-color); }
+.vector-tab { display: flex; align-items: center; gap: 6px; padding: 10px 16px; font-size: 13px; font-weight: 500; color: var(--text-secondary); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 0.2s, border-color 0.2s; }
+.vector-tab:hover { color: var(--text-primary); }
+.vector-tab.active { color: var(--primary-color); border-bottom-color: var(--primary-color); font-weight: 600; }
+
+/* ── Training List ────────────────────────────────────────────────────────── */
+.training-list { display: flex; flex-direction: column; gap: 8px; }
+.training-row { background: var(--surface-color); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; transition: border-color 0.2s; }
+.training-row.editing { border-color: #8B5CF6; }
+.training-row-main { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 16px; }
+.training-row-left { flex: 1; min-width: 0; }
+.training-row-headline { font-size: 14px; font-weight: 500; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.training-row-meta { display: flex; align-items: center; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+.meta-chip { font-size: 11px; color: var(--text-muted); border: 1px solid var(--border-color); border-radius: 6px; padding: 2px 7px; font-weight: 500; }
+.training-row-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.btn-train-edit { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-muted); transition: color 0.2s, border-color 0.2s; }
+.btn-train-edit:hover { color: #8B5CF6; border-color: #8B5CF6; }
+.btn-train-sync { display: flex; align-items: center; gap: 5px; padding: 6px 14px; background: linear-gradient(135deg, #6366F1, #8B5CF6); color: #fff; border-radius: 8px; font-size: 12px; font-weight: 600; transition: opacity 0.2s; }
+.btn-train-sync:hover:not(:disabled) { opacity: 0.85; }
+.btn-train-sync:disabled { opacity: 0.5; }
+
+/* ── Edit Panel ───────────────────────────────────────────────────────────── */
+.training-edit-panel { border-top: 1px solid #8B5CF640; background: rgba(139,92,246,0.04); padding: 16px; }
+.edit-panel-title { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: #8B5CF6; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+.edit-fields { display: flex; flex-direction: column; gap: 12px; }
+
+/* ── Synced List ──────────────────────────────────────────────────────────── */
+.synced-list { display: flex; flex-direction: column; gap: 6px; }
+.synced-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; background: var(--surface-color); border: 1px solid var(--border-color); border-radius: 10px; padding: 12px 14px; }
+.synced-row-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+.sync-badge { display: flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; color: var(--success-color); background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.3); border-radius: 6px; padding: 2px 7px; white-space: nowrap; flex-shrink: 0; }
+.synced-headline { font-size: 13px; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.synced-stocks { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+.stock-chip { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 5px; letter-spacing: 0.3px; }
+.stock-chip.direction-positive { background: rgba(16,185,129,0.15); color: #10B981; }
+.stock-chip.direction-negative { background: rgba(239,68,68,0.15); color: #EF4444; }
+.stock-chip.direction-neutral { background: rgba(139,143,168,0.15); color: #8B8FA8; }
+
+/* ── Vice-Versa Stock Panel ───────────────────────────────────────────────── */
+.vice-versa-header { display: flex; align-items: flex-start; gap: 14px; background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(139,92,246,0.05)); border: 1px solid rgba(99,102,241,0.2); border-radius: 12px; padding: 16px; margin-bottom: 20px; }
+.vice-versa-icon { width: 40px; height: 40px; background: linear-gradient(135deg, #6366F1, #8B5CF6); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #fff; flex-shrink: 0; }
+.vice-versa-title { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+.vice-versa-sub { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+.stock-search-bar { display: flex; gap: 10px; margin-bottom: 12px; }
+.stock-search-input-wrap { flex: 1; display: flex; align-items: center; gap: 10px; background: var(--surface-color); border: 1px solid var(--border-color); border-radius: 10px; padding: 0 14px; color: var(--text-muted); transition: border-color 0.2s; }
+.stock-search-input-wrap:focus-within { border-color: var(--primary-color); }
+.stock-search-input { flex: 1; background: transparent; border: none; outline: none; color: var(--text-primary); font-size: 14px; padding: 11px 0; font-family: inherit; letter-spacing: 0.5px; font-weight: 500; }
+.quick-sym-chip { font-size: 11px; font-weight: 600; padding: 4px 10px; border: 1px solid var(--border-color); border-radius: 20px; color: var(--text-secondary); transition: all 0.15s; letter-spacing: 0.3px; }
+.quick-sym-chip:hover { border-color: var(--primary-color); color: var(--primary-color); background: rgba(99,102,241,0.08); }
+.search-results-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.search-results-symbol { font-size: 20px; font-weight: 800; color: var(--primary-color); letter-spacing: 1px; }
+.news-results-list { display: flex; flex-direction: column; gap: 8px; }
+.stock-news-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; background: var(--surface-color); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px 16px; transition: border-color 0.2s; }
+.stock-news-row:hover { border-color: rgba(99,102,241,0.3); }
+.stock-news-row-left { flex: 1; min-width: 0; }
+.dir-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 6px; border-width: 1px; border-style: solid; letter-spacing: 0.5px; }
+.sent-badge { font-size: 11px; font-weight: 500; }
+.verified-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; color: #10B981; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.25); border-radius: 5px; padding: 2px 7px; }
+.stock-news-headline { font-size: 14px; font-weight: 500; color: var(--text-primary); margin-top: 4px; line-height: 1.4; }
+.stock-news-reason { font-size: 12px; color: var(--text-muted); margin-top: 4px; font-style: italic; }
+.stock-news-date { font-size: 11px; color: var(--text-muted); white-space: nowrap; flex-shrink: 0; margin-top: 4px; }
+select.form-input { cursor: pointer; }

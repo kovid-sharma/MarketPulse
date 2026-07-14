@@ -70,6 +70,10 @@ class ArticleDB(Base):
     # Raw
     raw_json = Column(JSON, nullable=True)
 
+    # Vector store sync
+    vector_synced = Column(Boolean, default=False)
+    vector_synced_at = Column(DateTime(timezone=True), nullable=True)
+
 
 # ── Pydantic schemas ──────────────────────────────────────────────────────────
 
@@ -125,6 +129,8 @@ class ArticleOut(ArticleBase):
     sentiment: SentimentEnum | None
     markets_affected: list[str] | None = None
     trade_logic: str | None = None
+    vector_synced: bool = False
+    vector_synced_at: datetime | None = None
 
     model_config = {"from_attributes": True}
 

@@ -14,6 +14,14 @@ class Settings(BaseSettings):
     GNEWS_API_KEY: str
     GEMINI_API_KEY: str
 
+    # ── AWS (Bedrock embeddings + OpenSearch Serverless vector store) ─────────
+    AWS_ACCESS_KEY_ID: str | None = None
+    AWS_SECRET_ACCESS_KEY: str | None = None
+    AWS_REGION: str = "us-east-1"
+    # Full HTTPS endpoint of the OpenSearch Serverless collection, e.g.:
+    # https://xxxxxxxxxxxxxx.us-east-1.aoss.amazonaws.com
+    OPENSEARCH_ENDPOINT: str | None = None
+
     # ── Database ──────────────────────────────────────────────────────────────
     DATABASE_URL: str  # e.g. postgresql+asyncpg://user:pass@host/db
 

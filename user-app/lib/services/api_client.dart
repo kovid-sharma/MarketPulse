@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/article.dart';
+import '../models/stock_profile.dart';
 
 // ── Base URL ──────────────────────────────────────────────────────────────────
-// Change this to your Render backend URL in production.
 const String _kBaseUrl =
     String.fromEnvironment('API_BASE_URL', defaultValue: 'https://marketpulse-mu5o.onrender.com');
 
@@ -26,7 +26,6 @@ class ApiClient {
       headers: {'Content-Type': 'application/json'},
     ));
 
-    // Attach JWT token to every request
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
         final prefs = await SharedPreferences.getInstance();
@@ -37,10 +36,8 @@ class ApiClient {
         return handler.next(options);
       },
       onError: (error, handler) {
-        // 401 — token expired, clear locally
         if (error.response?.statusCode == 401) {
-          SharedPreferences.getInstance()
-              .then((p) => p.remove('auth_token'));
+          SharedPreferences.getInstance().then((p) => p.remove('auth_token'));
         }
         return handler.next(error);
       },
@@ -50,18 +47,12 @@ class ApiClient {
   // ── Auth ───────────────────────────────────────────────────────────────────
 
   Future<Map<String, dynamic>> login(String email, String password) async {
-    final resp = await _dio.post('/auth/login', data: {
-      'email': email,
-      'password': password,
-    });
+    final resp = await _dio.post('/auth/login', data: {'email': email, 'password': password});
     return resp.data as Map<String, dynamic>;
   }
 
   Future<Map<String, dynamic>> register(String email, String password) async {
-    final resp = await _dio.post('/auth/register', data: {
-      'email': email,
-      'password': password,
-    });
+    final resp = await _dio.post('/auth/register', data: {'email': email, 'password': password});
     return resp.data as Map<String, dynamic>;
   }
 
@@ -100,5 +91,32 @@ class ApiClient {
 
   Future<void> registerDeviceToken(String token) async {
     await _dio.post('/users/device-token', data: {'token': token});
+  }
+
+  // ── Stock Intelligence (Vice-Versa) ────────────────────────────────────────
+
+  /// Get stock profile metadata (name, sector, impact summary, keywords)
+  Future<StockProfile> getStockProfile(String symbol) async {
+    final resp = await _dio.get('/users/stocks/${symbol.toUpperCase()}');
+    return StockProfile.fromJson(resp.data as Map<String, dynamic>);
+  }
+
+  /// Vice-versa: get all news articles that affected this stock
+  Future<List<StockNewsItem>> getNewsForStock(String symbol, {int limit = 20}) async {
+    final resp = await _dio.get(
+      '/users/stocks/${symbol.toUpperCase()}/news',
+      queryParameters: {'limit': limit},
+    );
+    final data = resp.data as Map<String, dynamic>;
+    final newsList = (data['news'] as List? ?? []);
+    return newsList.map((j) => StockNewsItem.fromJson(j as Map<String, dynamic>)).toList();
+  }
+
+  /// Get trending stocks sorted by news activity
+  Future<List<TrendingStock>> getTrendingStocks({int limit = 20}) async {
+    final resp = await _dio.get('/users/stocks', queryParameters: {'limit': limit});
+    final data = resp.data as Map<String, dynamic>;
+    final stocks = (data['trending_stocks'] as List? ?? []);
+    return stocks.map((j) => TrendingStock.fromJson(j as Map<String, dynamic>)).toList();
   }
 }

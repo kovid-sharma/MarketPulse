@@ -12,6 +12,7 @@ import bcrypt
 
 from app.models.article import ArticleDB, Base, NormalizedArticle
 from app.models.user import UserDB
+from app.models.stock_profile import StockProfileDB
 
 # ── Password hashing ──────────────────────────────────────────────────────────
 
@@ -36,6 +37,7 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 _USERS: dict[uuid.UUID, UserDB] = {}
 _ARTICLES: dict[uuid.UUID, ArticleDB] = {}
+_STOCK_PROFILES: dict[str, StockProfileDB] = {}  # keyed by symbol.upper()
 
 
 # Seed default credentials immediately
@@ -231,6 +233,37 @@ async def update_article_pipeline(
 
 async def count_articles(session: Any) -> int:
     return len(_ARTICLES)
+
+
+async def list_articles_pending_vector_sync(
+    session: Any,
+    limit: int = 50,
+    offset: int = 0,
+) -> list[ArticleDB]:
+    """Articles that finished the AI pipeline but haven't been synced to OpenSearch."""
+    results = [
+        art for art in _ARTICLES.values()
+        if art.ai_status == "done"
+        and art.is_financially_relevant is True
+        and not getattr(art, "vector_synced", False)
+        and art.impacts
+    ]
+    results.sort(key=lambda x: x.fetched_at or datetime.min, reverse=True)
+    return results[offset : offset + limit]
+
+
+async def list_articles_vector_synced(
+    session: Any,
+    limit: int = 50,
+    offset: int = 0,
+) -> list[ArticleDB]:
+    """Articles already synced to the vector store."""
+    results = [
+        art for art in _ARTICLES.values()
+        if getattr(art, "vector_synced", False)
+    ]
+    results.sort(key=lambda x: getattr(x, "vector_synced_at", None) or datetime.min, reverse=True)
+    return results[offset : offset + limit]
 
 
 # ── User CRUD ─────────────────────────────────────────────────────────────────

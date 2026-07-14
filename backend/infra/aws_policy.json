@@ -1,0 +1,38 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "BedrockEmbeddings",
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:InvokeModel",
+        "bedrock:InvokeModelWithResponseStream",
+        "bedrock:ListFoundationModels",
+        "bedrock:GetFoundationModel"
+      ],
+      "Resource": [
+        "arn:aws:bedrock:*::foundation-model/amazon.titan-embed-text-v2:0",
+        "arn:aws:bedrock:*::foundation-model/amazon.titan-embed-text-v1"
+      ]
+    },
+    {
+      "Sid": "OpenSearchServerless",
+      "Effect": "Allow",
+      "Action": [
+        "aoss:CreateCollection",
+        "aoss:DeleteCollection",
+        "aoss:UpdateCollection",
+        "aoss:BatchGetCollection",
+        "aoss:ListCollections",
+        "aoss:CreateSecurityPolicy",
+        "aoss:GetSecurityPolicy",
+        "aoss:UpdateSecurityPolicy",
+        "aoss:CreateAccessPolicy",
+        "aoss:GetAccessPolicy",
+        "aoss:UpdateAccessPolicy",
+        "aoss:APIAccessAll"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
