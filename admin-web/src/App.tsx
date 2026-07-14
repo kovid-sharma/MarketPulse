@@ -5,16 +5,16 @@ import {
   RefreshCw, TrendingUp, AlertTriangle, CheckCircle2,
   PlusCircle, DollarSign, LogOut, Check, X, ShieldAlert,
   ArrowRight, FileText, Globe, KeyRound, Database, Cpu,
-  Zap, ChevronRight, Edit3, Save, BarChart2, Link2,
-  Search, Tag, Brain, Activity, Clock, ToggleLeft, ToggleRight,
-  AlertCircle, BookOpen, Layers
+  Zap, Edit3, Save, BarChart2, Link2,
+  Search, Brain, Clock,
+  AlertCircle
 } from 'lucide-react';
 import './App.css';
 
 // ── API CLIENT ───────────────────────────────────────────────────────────────
 
 const api = axios.create({
-  baseURL: 'https://marketpulse-mu5o.onrender.com',
+  baseURL: (import.meta.env.VITE_API_URL as string) || 'https://marketpulse-mu5o.onrender.com',
   headers: { 'Content-Type': 'application/json' },
 });
 

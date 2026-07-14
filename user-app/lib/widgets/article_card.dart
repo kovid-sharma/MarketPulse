@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../models/article.dart';
 
@@ -99,7 +100,7 @@ class ArticleCard extends ConsumerWidget {
                   ),
                 ),
               ],
-              // Stocks affected — show with effect colours
+              // Stocks affected — tappable to Stock Intelligence screen
               if (article.stockImpacts.isNotEmpty) ...[
                 const SizedBox(height: 10),
                 Wrap(
@@ -107,7 +108,10 @@ class ArticleCard extends ConsumerWidget {
                   runSpacing: 4,
                   children: article.stockImpacts
                       .take(4)
-                      .map((s) => _StockEffectChip(stock: s))
+                      .map((s) => _StockEffectChip(
+                            stock: s,
+                            onTap: () => context.push('/stocks/${s.symbol}'),
+                          ))
                       .toList(),
                 ),
               ],
@@ -204,7 +208,8 @@ class _SentimentChip extends StatelessWidget {
 
 class _StockEffectChip extends StatelessWidget {
   final StockImpact stock;
-  const _StockEffectChip({required this.stock});
+  final VoidCallback? onTap;
+  const _StockEffectChip({required this.stock, this.onTap});
 
   static Color _col(String effect) {
     switch (effect) {
@@ -222,20 +227,32 @@ class _StockEffectChip extends StatelessWidget {
         : stock.direction == 'negative'
             ? '▼'
             : '■';
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withOpacity(0.4)),
-      ),
-      child: Text(
-        '$dirArrow ${stock.symbol}',
-        style: TextStyle(
-          color: color,
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.3,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.15),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: color.withOpacity(0.4)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '$dirArrow ${stock.symbol}',
+              style: TextStyle(
+                color: color,
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.3,
+              ),
+            ),
+            if (onTap != null) ...[
+              const SizedBox(width: 3),
+              Icon(Icons.open_in_new_rounded, color: color.withOpacity(0.7), size: 9),
+            ],
+          ],
         ),
       ),
     );

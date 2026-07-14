@@ -9,6 +9,7 @@ import 'screens/feed_screen.dart';
 import 'screens/article_detail_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/notifications_screen.dart';
+import 'screens/stock_screen.dart';
 import 'services/auth_service.dart';
 
 // ── FCM Background Handler ────────────────────────────────────────────────────
@@ -16,7 +17,6 @@ import 'services/auth_service.dart';
 @pragma('vm:entry-point')
 Future<void> _fcmBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
-  // Background notifications are handled by the OS notification tray
 }
 
 // ── Router ────────────────────────────────────────────────────────────────────
@@ -44,6 +44,16 @@ GoRouter _buildRouter(WidgetRef ref) {
       GoRoute(
           path: '/notifications',
           builder: (_, __) => const NotificationsScreen()),
+      // ── Stock Intelligence (Vice-Versa) ────────────────────────────────────
+      GoRoute(
+        path: '/stocks',
+        builder: (_, __) => const StockScreen(),
+      ),
+      GoRoute(
+        path: '/stocks/:symbol',
+        builder: (_, state) =>
+            StockScreen(initialSymbol: state.pathParameters['symbol']),
+      ),
     ],
   );
 }

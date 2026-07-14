@@ -416,20 +416,25 @@ class _BottomNav extends ConsumerWidget {
         backgroundColor: Colors.transparent,
         selectedItemColor: const Color(0xFF6366F1),
         unselectedItemColor: const Color(0xFF6B7280),
+        type: BottomNavigationBarType.fixed,
         elevation: 0,
         onTap: (i) {
           switch (i) {
             case 0:
               context.go('/feed');
             case 1:
-              context.go('/notifications');
+              context.go('/stocks');
             case 2:
+              context.go('/notifications');
+            case 3:
               context.go('/settings');
           }
         },
         items: const [
           BottomNavigationBarItem(
               icon: Icon(Icons.article_outlined), label: 'Feed'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.show_chart_rounded), label: 'Stocks'),
           BottomNavigationBarItem(
               icon: Icon(Icons.notifications_outlined), label: 'Alerts'),
           BottomNavigationBarItem(
