@@ -339,8 +339,9 @@ EXISTING_CF=$(aws cloudfront list-distributions \
   --query "DistributionList.Items[?Origins.Items[0].DomainName=='${S3_BUCKET}.s3.amazonaws.com'].Id" \
   --output text 2>/dev/null || echo "")
 
-if [ -z "$EXISTING_CF" ]; then
+if [ -z "$EXISTING_CF" ] || [ "$EXISTING_CF" = "None" ]; then
   CF_ORIGIN_ID="${APP_NAME}-admin-origin"
+  echo "🚀  Creating CloudFront distribution (this can take a few minutes)..."
   CF_DIST=$(aws cloudfront create-distribution \
     --distribution-config "{
       \"CallerReference\":\"${APP_NAME}-admin-$(date +%s)\",

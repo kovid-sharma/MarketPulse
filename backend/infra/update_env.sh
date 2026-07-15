@@ -29,7 +29,7 @@ ECR_ROLE_ARN="arn:aws:iam::${ACCOUNT_ID}:role/${APP_NAME}-apprunner-ecr-role"
 ECR_URI="${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/${APP_NAME}-backend"
 
 # Parse .env
-ENV_JSON="["
+ENV_JSON="{"
 first=1
 while IFS='=' read -r key value; do
   [[ "$key" =~ ^#.*$ ]] && continue
@@ -38,11 +38,12 @@ while IFS='=' read -r key value; do
   value="${value%"${value##*[! ]}"}"
   value="${value#\"}"
   value="${value%\"}"
+  value=$(echo -n "$value" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g')
   [ -z "$value" ] && continue
   if [ "$first" = "1" ]; then first=0; else ENV_JSON="${ENV_JSON},"; fi
-  ENV_JSON="${ENV_JSON}{\"name\":\"${key}\",\"value\":\"${value}\"}"
+  ENV_JSON="${ENV_JSON}\"${key}\":\"${value}\""
 done < "$BACKEND_DIR/.env"
-ENV_JSON="${ENV_JSON}]"
+ENV_JSON="${ENV_JSON}}"
 
 aws apprunner update-service \
   --service-arn "$SERVICE_ARN" \

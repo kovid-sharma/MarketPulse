@@ -28,21 +28,29 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
-AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID") or None
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY") or None
 AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 COLLECTION_NAME = "marketpulse-vectors"
-
-if not AWS_ACCESS_KEY_ID or not AWS_SECRET_ACCESS_KEY:
-    print("❌  AWS credentials not found in .env")
-    print("    Set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY")
-    sys.exit(1)
 
 try:
     import boto3
     from botocore.exceptions import ClientError
 except ImportError:
     print("❌  boto3 not installed. Run: pip install boto3")
+    sys.exit(1)
+
+# Verify credentials can be resolved
+try:
+    temp_session = boto3.Session(
+        aws_access_key_id=AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+        region_name=AWS_REGION,
+    )
+    temp_session.get_credentials()
+except Exception as e:
+    print("❌  AWS credentials not found in .env and could not be resolved by boto3")
+    print("    Please run: aws configure")
     sys.exit(1)
 
 
